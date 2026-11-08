@@ -33,6 +33,6 @@ git push origin main
 Website kembali ke versi sebelumnya dalam sekitar 1 menit.
 
 ## Rencana
-- Email `cs@yasaglobal.id`
+- Email `info@yasaglobal.id`
 - Web app dengan login dan database di subdomain `app.`
 - Subdomain `staging.` untuk uji coba sebelum rilis
