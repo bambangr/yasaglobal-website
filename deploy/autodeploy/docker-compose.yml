@@ -1,0 +1,42 @@
+# Auto-deploy: tiap 60 detik mengambil branch main dari GitHub dan
+# menyalin isi folder site/ ke /var/www/yasaglobal (webroot Nginx).
+# Tidak butuh SSH key atau secret. Repo harus publik.
+services:
+  sync:
+    image: alpine/git:latest
+    container_name: yasaglobal-autodeploy
+    restart: unless-stopped
+    environment:
+      REPO_URL: https://github.com/bambangr/yasaglobal-website.git
+      BRANCH: main
+      WEBROOT: /www
+      INTERVAL: "60"
+    volumes:
+      - /var/www/yasaglobal:/www
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        set -u
+        WORK="$${WORK_DIR:-/tmp/repo}"
+        LAST=""
+        sync_once() {
+          if [ ! -d "$$WORK/.git" ]; then
+            git clone --quiet --depth 1 --branch "$$BRANCH" "$$REPO_URL" "$$WORK" || return 1
+          fi
+          git -C "$$WORK" fetch --quiet --depth 1 origin "$$BRANCH" || return 1
+          git -C "$$WORK" reset --quiet --hard "origin/$$BRANCH"
+          NEW=$$(git -C "$$WORK" rev-parse HEAD)
+          [ "$$NEW" = "$$LAST" ] && return 0
+          if [ ! -s "$$WORK/site/index.html" ]; then
+            echo "SKIP $$NEW: site/index.html kosong atau tidak ada"
+            return 1
+          fi
+          cp -r "$$WORK/site/." "$$WEBROOT/" && chmod -R a+rX "$$WEBROOT"
+          LAST="$$NEW"
+          echo "DEPLOYED $$NEW"
+        }
+        while true; do
+          sync_once || echo "sync gagal, coba lagi"
+          [ -n "$${SYNC_ONCE:-}" ] && exit 0
+          sleep "$$INTERVAL"
+        done

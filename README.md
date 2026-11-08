@@ -5,31 +5,34 @@ Website company profile PT Yasa Global Internasional — https://yasaglobal.id
 Satu halaman statis (`site/index.html`), tanpa build step.
 
 ## Struktur
-- `site/index.html` — halaman website
+- `site/index.html` — halaman website. Semua isi folder `site/` ikut terdeploy.
 - `deploy/nginx-yasaglobal.conf` — konfigurasi dasar Nginx (dokumentasi)
+- `deploy/autodeploy/docker-compose.yml` — deploy otomatis dari GitHub ke server
 
-## Infrastruktur
-| Item | Nilai |
-|---|---|
-| VPS | Hostinger KVM 2, Ubuntu 26.04 LTS (srv2137916.hstgr.cloud) |
-| Web server | Nginx, file di `/var/www/yasaglobal/` |
-| HTTPS | Let's Encrypt via Certbot, perpanjangan otomatis |
-| DNS | Hostinger (record A: `@`, `www`, `app`, `staging` -> IP VPS) |
-| Firewall (Hostinger) | `web-server-basic`: hanya port 22, 80, 443 terbuka |
-| Docker | Proyek `yims` (PostgreSQL 16 + Redis 7), tidak dipublikasikan ke luar |
+## Alur mengubah website
+1. Edit `site/index.html` (atau minta Claude mengeditnya).
+2. Commit dan push ke branch `main`.
+3. Dalam sekitar 1 menit server mengambil perubahan dan website ter-update otomatis.
 
-## Mengubah isi website
-1. Edit `site/index.html`, commit, push ke `main`.
-2. Salin ke server:
-   ```bash
-   scp site/index.html root@IP_VPS:/var/www/yasaglobal/index.html
-   ```
+Tidak ada langkah `scp` atau login ke server.
 
-## Aturan
-- Jangan menyimpan password, token, atau API key di repo ini.
-- Port baru (misalnya untuk web app) harus ditambahkan dulu ke firewall Hostinger.
+## Cara kerja deploy otomatis
+Sebuah container kecil di server (`yasaglobal-autodeploy`) mengecek branch `main`
+tiap 60 detik. Kalau ada commit baru, isi folder `site/` disalin ke webroot Nginx.
+
+Pengaman:
+- Kalau `site/index.html` kosong atau hilang, deploy dilewati dan website lama tetap tayang.
+- Tidak butuh SSH key atau secret; repo harus publik.
+- Karena repo publik, **jangan pernah menaruh password, token, atau API key di repo ini.**
+
+## Membatalkan perubahan (rollback)
+```bash
+git revert <commit>
+git push origin main
+```
+Website kembali ke versi sebelumnya dalam sekitar 1 menit.
 
 ## Rencana
-- Deploy otomatis dari GitHub (butuh SSH key khusus deploy sebagai GitHub secret).
-- `app.yasaglobal.id` untuk web app dengan login dan database, `staging.` untuk uji coba.
-- Email `cs@yasaglobal.id` (menunggu pilihan penyedia: Zoho gratis atau Hostinger).
+- Email `cs@yasaglobal.id`
+- Web app dengan login dan database di subdomain `app.`
+- Subdomain `staging.` untuk uji coba sebelum rilis
