@@ -32,6 +32,11 @@ git push origin main
 ```
 Website kembali ke versi sebelumnya dalam sekitar 1 menit.
 
+## Tampilan HP (lebar layar <= 560 px)
+- Kartu Produk, Layanan, dan Keunggulan bisa digeser ke samping (dengan titik penanda), sehingga halaman lebih pendek.
+- Bilah aksi bawah: Chat WhatsApp, Lokasi (Google Maps), Email. Tombol WhatsApp melayang disembunyikan di HP.
+- Judul bagian tidak tertutup header saat melompat dari menu.
+
 ## Rencana
 - Email `info@yasaglobal.id`
 - Web app dengan login dan database di subdomain `app.`
